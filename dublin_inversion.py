@@ -82,20 +82,20 @@ class GeoFitnessNeural():
         error_matrix = np.zeros([59, 5, 4])
         self.x_locs, self.y_locs = [], []
         for i in range(5):
-            data_matrix[:, i, 2] = [np.log10(j[5])*(1 + np.random.randn()*0.05)
+            data_matrix[:, i, 2] = [np.log10(j[5])*(1 + np.random.randn()*0.1)
                                     for j in fdata[i::5]]
-            error_matrix[:, i, 2] = [np.log10(j[5])*0.05
+            error_matrix[:, i, 2] = [np.log10(j[5])*0.1
                                     for j in fdata[i::5]]
-            data_matrix[:, i, 0] = [j[6] + np.random.randn()*2
+            data_matrix[:, i, 0] = [j[6] + np.random.randn()*5
                                     for j in fdata[i::5]]
             error_matrix[:, i, 0] = [2 for j in fdata[i::5]]
-            data_matrix[:, i, 3] = [np.log10(j[7])*(1 + np.random.randn()*0.05)
+            data_matrix[:, i, 3] = [np.log10(j[7])*(1 + np.random.randn()*0.1)
                                     for j in fdata[i::5]]
-            error_matrix[:, i, 3] = [np.log10(j[7])*0.05
+            error_matrix[:, i, 3] = [np.log10(j[7])*0.1
                                     for j in fdata[i::5]]
-            data_matrix[:, i, 1] = [j[8] + 180 + np.random.randn()*2
+            data_matrix[:, i, 1] = [j[8] + 180 + np.random.randn()*5
                                     for j in fdata[i::5]]
-            error_matrix[:, i, 1] = [2 for j in fdata[i::5]]
+            error_matrix[:, i, 1] = [5 for j in fdata[i::5]]
         for site in fdata[::5]:
             self.x_locs.append(site[0])
             self.y_locs.append(site[1])
