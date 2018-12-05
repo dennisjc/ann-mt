@@ -10,9 +10,6 @@ import cma
 from glob import glob
 from mtpy.core.edi import Edi
 
-## Dennis Conway
-
-
 
 def scale_loc(x):
     minx = -0.234375E+05
@@ -127,7 +124,8 @@ class GeoFitnessNeural():
         scale_response = raw_response * (net['max'] - net['min']) + net['min']
         scale_response[:, 10:] = scale_response[:, 10:]
         scale_response[:, :10] = 90 - scale_response[:, :10]
-        print(self.data.shape)
+        # print(self.data.shape)
+        print(scale_response[0])
         neural_matrix = np.zeros([len(self.lo_blob_parameters),
                                  self.data.shape[0], self.data.shape[1],
                                  self.data.shape[2]])
