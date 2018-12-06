@@ -13,7 +13,7 @@ import random
 import os
 from multiprocessing import Pool, TimeoutError
 import subprocess32 as subprocess
-from dublin_inversion import scale_params, GeoFitnessNeural, evol
+from blob_inversion import scale_params, GeoFitnessNeural, evol
 
 
 def scale_params(parameters, unscale=False):
@@ -60,14 +60,16 @@ def evaluate_population(x, processes, data, errors):
     # return [evaluate_single(i) for i in x]
 
 
-def evol(params, sigma, popsize, maxiter, fwd, processes=4):
+def evol(params, sigma, popsize, maxiter, processes=4):
     trajectory = []
+    with open('../dublin/data.p', 'rb') as f:
+        data, data_errors = pickle.load(f)
     es = cma.CMAEvolutionStrategy(params, sigma, {
         'popsize': popsize, 'maxiter': maxiter, 'bounds': [0, 1]})
     fit = [256] * popsize
     while not es.stop():
         x = es.ask(popsize)
-        fit = evaluate_population(x, processes)
+        fit = evaluate_population(x, processes, data, errors)
         es.tell(x, fit)
         es.disp()
         trajectory.append(es.best.get()[:2])
