@@ -39,7 +39,8 @@ class GeoFitnessNeural():
     blob parameters """
 
     def __init__(self, data_fn='blk3d.data', neural_dir='./', error=None,
-                 batch_size=1024 * 4, override_error=False, scale=False):
+                 batch_size=1024 * 4, override_error=False, scale=False,
+                 read_data=True):
         """
             reads in data file from current directory and neural network data
             it is assumed that neural net models are structured as follows:
@@ -53,8 +54,9 @@ class GeoFitnessNeural():
         """
 
         self.override_error = override_error
-        self.data, self.data_errors = self.read_data(
-            data_fn, scale=False, error=error)
+        if read_data:
+            self.data, self.data_errors = self.read_data(
+                data_fn, scale=False, error=error)
         self.neural_nets, self.neural_scale = {}, {}
         self.batch_size = batch_size
         base_names = [i[:-6] for i in glob1(neural_dir, '*.model')]
