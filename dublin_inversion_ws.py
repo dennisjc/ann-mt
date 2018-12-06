@@ -62,7 +62,7 @@ def evaluate_population(x, processes, data, errors):
 
 def evol(params, sigma, popsize, maxiter, processes=4):
     trajectory = []
-    with open('../dublin/data.p', 'rb') as f:
+    with open('./dublin/data.p', 'rb') as f:
         data, data_errors = pickle.load(f)
     es = cma.CMAEvolutionStrategy(params, sigma, {
         'popsize': popsize, 'maxiter': maxiter, 'bounds': [0, 1]})
