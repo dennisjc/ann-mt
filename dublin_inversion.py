@@ -44,7 +44,8 @@ class GeoFitnessNeural():
     blob parameters """
 
     def __init__(self, data_fn='blk3d.data', neural_dir='./', error=None,
-                 batch_size=1024 * 4, error_floor=0.05, scale=False):
+                 batch_size=1024 * 4, error_floor=0.05, scale=False,
+                 read_data=True):
         """
             reads in data file from current directory and neural network data
             it is assumed that neural net models are structured as follows:
@@ -72,7 +73,8 @@ class GeoFitnessNeural():
             self.neural_nets[model.input_shape[1]]['model'] = model
             self.neural_nets[model.input_shape[1]]['min'] = scale_min
             self.neural_nets[model.input_shape[1]]['max'] = scale_max
-        self.read_wsinv3dmt('./dublin/RP_Miensopust_wsinv3dmt.txt')
+        if read_data:
+            self.read_wsinv3dmt('./dublin/RP_Miensopust_wsinv3dmt.txt')
 
     def read_wsinv3dmt(self, filename):
         freqs = [0.56000000000000005, 5.5999999999999996, 10.0, 100, 1000]

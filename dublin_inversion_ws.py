@@ -44,7 +44,7 @@ def evaluate_single(x, data, errors):
     p1 = subprocess.Popen(['../wsinv3dmt'])
     p1.wait()
     time.sleep(2)
-    model = GeoFitnessNeural()
+    model = GeoFitnessNeural(read_data=False)
     model.data, model.data_errors = data, errors
     model.w3 = model.pop_data('./fwd_resp.02')
     rms = np.sqrt(np.average((model.w3 - model.data)**2/model.data_errors**2))
