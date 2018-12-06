@@ -70,7 +70,7 @@ def evol(params, sigma, popsize, maxiter, processes=4):
     fit = [256] * popsize
     while not es.stop():
         x = es.ask(popsize)
-        fit = evaluate_population(x, processes, data, errors)
+        fit = evaluate_population(x, processes, data, data_errors)
         es.tell(x, fit)
         es.disp()
         trajectory.append(es.best.get()[:2])
