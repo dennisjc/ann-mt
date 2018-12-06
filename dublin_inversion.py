@@ -1,7 +1,8 @@
 import sys
 import keras
 import numpy
-import os, sys
+import os
+import sys
 import numpy as np
 import time
 import utm
@@ -72,6 +73,7 @@ class GeoFitnessNeural():
             self.neural_nets[model.input_shape[1]]['min'] = scale_min
             self.neural_nets[model.input_shape[1]]['max'] = scale_max
         self.read_wsinv3dmt('./dublin/RP_Miensopust_wsinv3dmt.txt')
+
     def read_wsinv3dmt(self, filename):
         freqs = [0.56000000000000005, 5.5999999999999996, 10.0, 100, 1000]
         with open(filename) as f:
@@ -82,32 +84,33 @@ class GeoFitnessNeural():
         error_matrix = np.zeros([59, 5, 4])
         self.x_locs, self.y_locs = [], []
         for i in range(5):
-            data_matrix[:, i, 2] = [np.log10(j[5])*(1 + np.random.randn()*0.1)
+            data_matrix[:, i, 2] = [np.log10(j[5]) * (1 + np.random.randn() * 0.05)
                                     for j in fdata[i::5]]
-            error_matrix[:, i, 2] = [np.log10(j[5])*0.1
-                                    for j in fdata[i::5]]
-            data_matrix[:, i, 0] = [j[6] + np.random.randn()*5
+            error_matrix[:, i, 2] = [np.log10(j[5]) * 0.05
+                                     for j in fdata[i::5]]
+            data_matrix[:, i, 0] = [j[6] + np.random.randn() * 2
                                     for j in fdata[i::5]]
             error_matrix[:, i, 0] = [2 for j in fdata[i::5]]
-            data_matrix[:, i, 3] = [np.log10(j[7])*(1 + np.random.randn()*0.1)
+            data_matrix[:, i, 3] = [np.log10(j[7]) * (1 + np.random.randn() * 0.05)
                                     for j in fdata[i::5]]
-            error_matrix[:, i, 3] = [np.log10(j[7])*0.1
+            error_matrix[:, i, 3] = [np.log10(j[7]) * 0.05
+                                     for j in fdata[i::5]]
+            data_matrix[:, i, 1] = [j[8] + 180 + np.random.randn() * 2
                                     for j in fdata[i::5]]
-            data_matrix[:, i, 1] = [j[8] + 180 + np.random.randn()*5
-                                    for j in fdata[i::5]]
-            error_matrix[:, i, 1] = [5 for j in fdata[i::5]]
+            error_matrix[:, i, 1] = [2 for j in fdata[i::5]]
         for site in fdata[::5]:
             self.x_locs.append(site[0])
             self.y_locs.append(site[1])
         self.data = data_matrix
         self.data_errors = error_matrix
+
     def evaluate(self, lo_blob_parameters):
         inputs, rms = [], []
         self.lo_blob_parameters = lo_blob_parameters
         for blobs in lo_blob_parameters:
             for idx, (x, y) in enumerate(zip(self.x_locs, self.y_locs)):
                 neural_in = (np.array([scale_loc(x), scale_loc(y)] +
-                                      blobs.tolist()).reshape(len(blobs)+2))
+                                      blobs.tolist()).reshape(len(blobs) + 2))
                 inputs.append(neural_in)
         responses = self.forward(np.array(inputs))
         self.responses = responses
@@ -116,6 +119,7 @@ class GeoFitnessNeural():
         rms = [np.sqrt(np.mean(chi_2[i]))
                for i in range(len(lo_blob_parameters))]
         return rms
+
     def forward(self, inputs):
         self.inputs = scale_params(inputs)
         net = self.neural_nets[inputs.shape[1]]
@@ -127,33 +131,40 @@ class GeoFitnessNeural():
         # print(self.data.shape)
         print(scale_response[0])
         neural_matrix = np.zeros([len(self.lo_blob_parameters),
-                                 self.data.shape[0], self.data.shape[1],
-                                 self.data.shape[2]])
+                                  self.data.shape[0], self.data.shape[1],
+                                  self.data.shape[2]])
         scale_response = scale_response.reshape(len(self.lo_blob_parameters),
                                                 -1)
         for bdx, (blobs) in enumerate(self.lo_blob_parameters):
             for idx in range(59):
-                neural = scale_response[bdx, idx*20:(idx+1)*20].reshape(2, 5, 2)
+                neural = scale_response[bdx, idx *
+                                        20:(idx + 1) * 20].reshape(2, 5, 2)
                 # print neural.shape, neural_matrix.shape
+                # print(scale_response[bdx, idx *
+                #                         20:(idx + 1) * 20].reshape(2, 5, 2)[0])
                 for jdx in range(5):
                     # print(neural_matrix[bdx, idx, jdx].shape)
-                    neural_matrix[bdx, idx, jdx] = ([neural[1, jdx, 0],
-                                                     neural[0, jdx, 0],
-                                                     neural[1, jdx, 1],
-                                                     neural[0, jdx, 1]])
+                    neural_matrix[bdx, idx, jdx] = ([neural[0, jdx, 0],
+                                                     neural[0, jdx, 1],
+                                                     neural[1, jdx, 0],
+                                                     neural[1, jdx, 1]])
         self.raw_response = raw_response
         self.scale_response = neural_matrix
         return neural_matrix
 
+
 def scale_params(parameters, unscale=False):
     try:
-        mins = np.array([0, 0, 0.1, 0, 0.01, 0.02, 0.4, 0.4, 0.05, 0.05, 0, 0.05])
-        maxs = np.array([1, 1, 0.9, 1, 0.99, 0.99, 0.6, 0.6, 0.2, 0.2, 0.4, 0.2])
-        return (parameters*(maxs-mins) + mins)
+        mins = np.array([0, 0, 0.1, 0, 0.01, 0.02,
+                         0.4, 0.4, 0.05, 0.05, 0, 0.05])
+        maxs = np.array([1, 1, 0.9, 1, 0.99, 0.99,
+                         0.6, 0.6, 0.2, 0.2, 0.4, 0.2])
+        return (parameters * (maxs - mins) + mins)
     except:
         mins = mins[2:]
         maxs = maxs[2:]
-        return (parameters*(maxs-mins) + mins)
+        return (parameters * (maxs - mins) + mins)
+
 
 def evol(params, sigma, popsize, maxiter, forward_fn):
     trajectory = []
@@ -171,6 +182,7 @@ def evol(params, sigma, popsize, maxiter, forward_fn):
         trajectory.append(es.best.get()[:2])
     return trajectory[-1][0], trajectory[-1][1]
 
+
 def pad_model(b, no_blobs):
     print b
     # no_blobs = len(b[1:])/9
@@ -179,22 +191,22 @@ def pad_model(b, no_blobs):
     inserts = []
     for i in range(no_blobs):
         for j in [7, 10, 11]:
-            inserts.append(i*9+1+j)
+            inserts.append(i * 9 + 1 + j)
     for i in inserts[::-1]:
         b.insert(i, 0)
     return b
 
 
-def get_model(b):
+def get_model(b, model_name='./targetta'):
     print b
     b = pad_model(scale_params(b), 1)
-    c=' '.join(map(str,b))
+    c = ' '.join(map(str, b))
     print(c)
 
     model_template = './template'
-    target_model = './targetta'
+    target_model = model_name
 
-    callString='./saveModel '+ model_template + ' ' + c + ' > ' + target_model
+    callString = './saveModel ' + model_template + ' ' + c + ' > ' + target_model
     os.system(callString)
     time.sleep(2)
     # mtNS = ws2vtk(target_model, '../oneblob.resp')
