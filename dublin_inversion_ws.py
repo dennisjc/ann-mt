@@ -11,6 +11,7 @@ from create_test import runw3, pad_model
 import string
 import random
 import os
+import pickle
 from multiprocessing import Pool, TimeoutError
 import subprocess32 as subprocess
 from blob_inversion import scale_params, GeoFitnessNeural, evol
