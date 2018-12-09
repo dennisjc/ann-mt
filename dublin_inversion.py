@@ -82,8 +82,10 @@ class GeoFitnessNeural():
             data = f.readlines()[1:-1]
         data = [[float(x) for x in i.strip().split(' ')[::6]] for i in data]
         fdata = [i for i in data if i[2] in freqs]
-        data_matrix = np.zeros([59, 5, 4])
-        error_matrix = np.zeros([59, 5, 4])
+        fdata = [i for i in fdata if 0 <= scale_loc(i[0]) <= 1 and
+                 0 <= scale_loc(i[1]) <= 1]
+        data_matrix = np.zeros([39, 5, 4])
+        error_matrix = np.zeros([39, 5, 4])
         self.x_locs, self.y_locs = [], []
         for i in range(5):
             data_matrix[:, i, 2] = [np.log10(j[5]) * (1 + np.random.randn() * 0.05)
@@ -105,6 +107,65 @@ class GeoFitnessNeural():
             self.y_locs.append(site[1])
         self.data = data_matrix
         self.data_errors = error_matrix
+        grid = np.cumsum([1/17. for _ in range(16)])
+        x = [np.argmin(abs(grid - scale_loc(x))) for x in self.x_locs]
+        y = [np.argmin(abs(grid - scale_loc(y))) for y in self.y_locs]
+        self.xy = zip(x, y)
+
+    def pop_data(self, filename, error=None, off_diag=False):
+        with open(filename) as f:
+            data = f.readlines()
+        header = [float(i) for i in data.pop(0).split(' ') if i]
+        n_sites, freqs, components = header[0], header[1], header[2]
+        data.pop(0)
+        x_locs = []
+
+        while True:
+            line = data.pop(0)
+            if 'Station' in line:
+                break
+            x_locs.extend([float(i) for i in line.split(' ') if i])
+
+        y_locs = []
+        response = {}
+        while True:
+            line = data.pop(0)
+            if 'DATA' in line:
+                period = float(line.split(' ')[-1])
+                response[period] = []
+                break
+            y_locs.extend([float(i) for i in line.split(' ') if i])
+
+        while True:
+            line = data.pop(0)
+            if 'Iteration' in line or 'ERROR' in line:
+                break
+            if 'DATA' in line:
+                period = float(line.split(' ')[-1])
+                response[period] = []
+                continue
+            tensor = [float(i.strip()) for i in line.split(' ') if i.strip()]
+            if len(tensor) != 4:
+                tensor = tensor[2:6]
+            app_xy = np.log10(np.linalg.norm(np.array(tensor[0:2])*796)**2*period*0.2)
+            phs_xy = np.degrees(np.arctan2(tensor[0],-tensor[1]))
+            app_yx = np.log10(np.linalg.norm(np.array(tensor[2:4])*796)**2*period*0.2)
+            phs_yx = np.degrees(np.arctan2(-tensor[2],tensor[3]))
+            response[period].append([app_xy, phs_xy, app_yx, phs_yx])
+        ins = []
+        x_set = sorted(list(set(x_locs)))
+        y_set = sorted(list(set(y_locs)))
+        periods = sorted(response.keys())
+        data_matrix = np.zeros([len(x_set), len(y_set), len(response.keys()), 4])
+        for idx, (i, j) in enumerate(zip(x_locs, y_locs)):
+            x = np.argmax(np.array(x_set) == i)
+            y = np.argmax(np.array(y_set) == j)
+            for jdx, k in enumerate(sorted(response.keys())):
+                data_matrix[x, y, jdx] = response[k][idx]
+        true_matrix = np.zeros([39, 5, 4])
+        for idx, (i, j) in enumerate(self.xy):
+            true_matrix[idx] = data_matrix[i, j]
+        return true_matrix
 
     def evaluate(self, lo_blob_parameters):
         inputs, rms = [], []
@@ -138,7 +199,7 @@ class GeoFitnessNeural():
         scale_response = scale_response.reshape(len(self.lo_blob_parameters),
                                                 -1)
         for bdx, (blobs) in enumerate(self.lo_blob_parameters):
-            for idx in range(59):
+            for idx in range(39):
                 neural = scale_response[bdx, idx *
                                         20:(idx + 1) * 20].reshape(2, 5, 2)
                 # print neural.shape, neural_matrix.shape

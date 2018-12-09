@@ -14,7 +14,8 @@ import os
 import pickle
 from multiprocessing import Pool, TimeoutError
 import subprocess32 as subprocess
-from blob_inversion import scale_params, GeoFitnessNeural, evol
+from dublin_inversion import scale_params, GeoFitnessNeural, evol
+FNULL = open(os.devnull, 'w')
 
 
 def scale_params(parameters, unscale=False):
@@ -28,7 +29,7 @@ def scale_params(parameters, unscale=False):
         return (parameters*(maxs-mins) + mins)
 
 
-def evaluate_single(x, data, errors):
+def evaluate_single(x, data, errors, xy):
     id_ = ''.join(random.choice(string.ascii_letters) for m in xrange(10))
     b = pad_model(scale_params(x), 1)
     c=' '.join(map(str,b))
@@ -45,32 +46,37 @@ def evaluate_single(x, data, errors):
     p1.wait()
     time.sleep(2)
     model = GeoFitnessNeural(read_data=False)
+    model.xy = xy
     model.data, model.data_errors = data, errors
     model.w3 = model.pop_data('./fwd_resp.02')
     rms = np.sqrt(np.average((model.w3 - model.data)**2/model.data_errors**2))
+    print(rms)
     os.chdir('..')
     shutil.rmtree(id_)
     # os.rmdir(id_)
     return rms
 
 
-def evaluate_population(x, processes, data, errors):
-    pool = Pool(processes=processes)
-    rmses = [pool.apply_async(evaluate_single, (xi, data, errors)) for xi in x]
-    return [i.get() for i in rmses]
-    # return [evaluate_single(i) for i in x]
+def evaluate_population(x, processes, data, errors, xy):
+    # pool = Pool(processes=processes)
+    # rmses = [pool.apply_async(evaluate_single,
+    #                           (xi, data, errors, xy)) for xi in x]
+    # return [i.get() for i in rmses]
+    return [evaluate_single(i, data, errors, xy) for i in x]
 
 
 def evol(params, sigma, popsize, maxiter, processes=4):
     trajectory = []
-    with open('./dublin/data.p', 'rb') as f:
-        data, data_errors = pickle.load(f)
+    # with open('./dublin/data.p', 'rb') as f:
+    #     data, data_errors = pickle.load(f)
+    fwd = GeoFitnessNeural(read_data=True)
     es = cma.CMAEvolutionStrategy(params, sigma, {
         'popsize': popsize, 'maxiter': maxiter, 'bounds': [0, 1]})
     fit = [256] * popsize
     while not es.stop():
         x = es.ask(popsize)
-        fit = evaluate_population(x, processes, data, data_errors)
+        fit = evaluate_population(x, processes, fwd.data, fwd.data_errors,
+                                  fwd.xy)
         es.tell(x, fit)
         es.disp()
         trajectory.append(es.best.get()[:2])
