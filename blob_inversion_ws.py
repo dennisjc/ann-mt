@@ -18,8 +18,10 @@ from llres_yes import scale_params, GeoFitnessNeural, evol
 
 def scale_params(parameters, unscale=False):
     try:
-        mins = np.array([0, 0, 0.1, 0, 0.01, 0.02, 0.4, 0.4, 0.05, 0.05, 0, 0.05])
-        maxs = np.array([1, 1, 0.9, 1, 0.99, 0.99, 0.6, 0.6, 0.2, 0.2, 0.4, 0.2])
+        mins = np.array([0, 0, 0.1, 0, 0.01, 0.02, 0.4, 0.4, 0.05, 0.05, 0,
+                         0.05])
+        maxs = np.array([1, 1, 0.9, 1, 0.99, 0.99, 0.6, 0.6, 0.2, 0.2, 0.4,
+                         0.2])
         return (parameters*(maxs-mins) + mins)
     except:
         mins = mins[2:]

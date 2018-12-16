@@ -96,14 +96,18 @@ neural_matrix = np.zeros(data_matrix.shape)
 for idx, (i, j) in enumerate(zip(x_locs, y_locs)):
     x = np.argmax(np.array(x_set) == i)
     y = np.argmax(np.array(y_set) == j)
-    neural_in = np.array([scale_loc(x_set[x]), scale_loc(y_set[y])] + blob).reshape(1, 12)
+    neural_in = np.array(
+        [scale_loc(x_set[x]), scale_loc(y_set[y])] + blob).reshape(1, 12)
     ins.append(scale_loc(x))
     neural_out = (model.predict(neural_in)[0]*(maxs-mins)+mins).reshape(2, 5, 2)
     neural_out[1] = 10**neural_out[1]
     neural_out[0] = 90 - neural_out[0]
     for jdx, k in enumerate(sorted(response.keys())):
         data_matrix[x, y, jdx] = response[k][idx]
-        neural_matrix[x, y, jdx] = np.array([neural_out[1, jdx, 0], neural_out[0, jdx, 0], neural_out[1, jdx, 1], neural_out[0, jdx, 1]])
+        neural_matrix[x, y, jdx] = np.array([neural_out[1, jdx, 0],
+                                             neural_out[0, jdx, 0],
+                                             neural_out[1, jdx, 1],
+                                             neural_out[0, jdx, 1]])
 
 
 f, axes = plt.subplots(3, 4, sharey=True, figsize=(6, 5.1))
@@ -112,8 +116,14 @@ for idx, row in zip([0, 2, 4], axes):
         t = np.append(neural_matrix[:, :, :, jdx], data_matrix[:, :, :, jdx])
         if jdx == 0:
             # continue
-            im1 = nax.pcolormesh(x_set, y_set, np.log10(neural_matrix[:, :, idx, jdx]), cmap='viridis_r', edgecolor='k', linewidth=0.005, antialiased=False)
-            im2 = dax.pcolormesh(x_set, y_set, np.log10(data_matrix[:, :, idx, jdx]), cmap='viridis_r', edgecolor='k', linewidth=0.005, antialiased=False)
+            im1 = nax.pcolormesh(x_set, y_set,
+                                 np.log10(neural_matrix[:, :, idx, jdx]),
+                                 cmap='viridis_r', edgecolor='k',
+                                 linewidth=0.005, antialiased=False)
+            im2 = dax.pcolormesh(x_set, y_set,
+                                 np.log10(data_matrix[:, :, idx, jdx]),
+                                 cmap='viridis_r', edgecolor='k',
+                                 linewidth=0.005, antialiased=False)
             im1.set_clim([np.log10(t.min()), np.log10(t.max())])
             im2.set_clim([np.log10(t.min()), np.log10(t.max())])
             cbar_ax = f.add_axes([0.125, 0.19, 0.5-0.1275, 0.0333333])
@@ -124,8 +134,12 @@ for idx, row in zip([0, 2, 4], axes):
             cb.update_ticks()
             # cb.ax.tick_params(axis='x',direction='in',labeltop='on')
         else:
-            im1 = nax.pcolormesh(x_set, y_set, neural_matrix[:, :, idx, jdx], cmap='magma', edgecolor='k', linewidth=0.005, antialiased=False)
-            im2 = dax.pcolormesh(x_set, y_set, data_matrix[:, :, idx, jdx], cmap='magma', edgecolor='k', linewidth=0.005, antialiased=False)
+            im1 = nax.pcolormesh(x_set, y_set, neural_matrix[:, :, idx, jdx],
+                                 cmap='magma', edgecolor='k', linewidth=0.005,
+                                 antialiased=False)
+            im2 = dax.pcolormesh(x_set, y_set, data_matrix[:, :, idx, jdx],
+                                 cmap='magma', edgecolor='k', linewidth=0.005,
+                                 antialiased=False)
             im1.set_clim([t.min(), t.max()])
             im2.set_clim([t.min(), t.max()])
             cbar_ax = f.add_axes([0.53, 0.19, 0.5-0.1275, 0.0333333])
@@ -142,7 +156,8 @@ for idx, row in zip([0, 2, 4], axes):
         if jdx != 0:
             nax.tick_params(labelleft='off')
         else:
-            nax.set_ylabel('T = {} s'.format(periods[idx]).replace('0.56', '0.5'))
+            nax.set_ylabel(
+                'T = {} s'.format(periods[idx]).replace('0.56', '0.5'))
             nax.tick_params(labelleft='off')
             nax.set_xticklabels(['-2 km', '', '0 km', '', '2 km'])
         if idx != 0:
@@ -150,39 +165,14 @@ for idx, row in zip([0, 2, 4], axes):
             dax.tick_params(labelbottom='off')
         else:
             bot = r'{} ${}_{{xy}}$'
-            # nax.set_xlabel(bot.format('ANN', '\phi' if jdx == 1 else r'\rho'))
             nax.set_xlabel('ANN')
             nax.tick_params(labelbottom='off')
             nax.xaxis.set_label_position('top')
-            # dax.set_xlabel(bot.format('WSINV3D', '\phi' if jdx == 1 else r'\rho'))
             dax.set_xlabel('WSINV3D')
             dax.tick_params(labelbottom='off')
             dax.xaxis.set_label_position('top')
         dax.tick_params(labelleft='off')
-    # ax = row[4]
-    # im1 = ax.pcolormesh(x_set, y_set, neural_matrix[:, :, idx, 0] - data_matrix[:, :, idx, 0], cmap='RdBu', edgecolor='k', linewidth=0.005, antialiased=False)
-    # maxi = np.max(np.abs(neural_matrix[:, :, idx, 0] - data_matrix[:, :, idx, 0]))
-    # im1.set_clim([-maxi, maxi])
-    # cbar_ax = f.add_axes([0.53, 0.19, 0.5-0.1275, 0.0333333])
-    # cb = f.colorbar(im1, cax=cbar_ax, orientation='horizontal')
-    # cb.set_label('wah')
-    # tick_locator = ticker.MaxNLocator(nbins=5)
-    # cb.locator = tick_locator
-    # cb.update_ticks()
-    # ax.set_ylim(y_set[0], y_set[-1])
-    # ax.set_xlim(x_set[0], x_set[-1])
-    # ax = row[5]
-    # im1 = ax.pcolormesh(x_set, y_set, neural_matrix[:, :, idx, 1] - data_matrix[:, :, idx, 1], cmap='RdBu', edgecolor='k', linewidth=0.005, antialiased=False)
-    # maxi = np.max(np.abs(neural_matrix[:, :, idx, 1] - data_matrix[:, :, idx, 1]))
-    # im1.set_clim([-maxi, maxi])
-    # cbar_ax = f.add_axes([0.53, 0.19, 0.5-0.1275, 0.0333333])
-    # cb = f.colorbar(im1, cax=cbar_ax, orientation='horizontal')
-    # cb.set_label('wah')
-    # tick_locator = ticker.MaxNLocator(nbins=5)
-    # cb.locator = tick_locator
-    # cb.update_ticks()
-    # ax.set_ylim(y_set[0], y_set[-1])
-    # ax.set_xlim(x_set[0], x_set[-1])
+
 
 sb_ax = f.add_axes([0.125, 0.02, 1.-0.125*2+0.025+0.02, 0.05])
 sb_ax.axes.get_xaxis().set_visible(False)
