@@ -74,7 +74,7 @@ class GeoFitnessNeural():
             self.neural_nets[model.input_shape[1]]['min'] = scale_min
             self.neural_nets[model.input_shape[1]]['max'] = scale_max
         if read_data:
-            self.read_wsinv3dmt('./dublin/RP_Miensopust_wsinv3dmt.txt')
+            self.read_wsinv3dmt('/network/cogme/outputs/dennis/neural_paper/dublin/RP_Miensopust_wsinv3dmt.txt')
 
     def read_wsinv3dmt(self, filename):
         freqs = [0.56000000000000005, 5.5999999999999996, 10.0, 100, 1000]
@@ -151,7 +151,7 @@ class GeoFitnessNeural():
             phs_xy = np.degrees(np.arctan2(tensor[0],-tensor[1]))
             app_yx = np.log10(np.linalg.norm(np.array(tensor[2:4])*796)**2*period*0.2)
             phs_yx = np.degrees(np.arctan2(-tensor[2],tensor[3]))
-            response[period].append([app_xy, phs_xy, app_yx, phs_yx])
+            response[period].append([phs_xy, phs_yx, app_xy, app_yx])
         ins = []
         x_set = sorted(list(set(x_locs)))
         y_set = sorted(list(set(y_locs)))

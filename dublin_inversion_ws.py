@@ -30,19 +30,25 @@ def scale_params(parameters, unscale=False):
 
 
 def evaluate_single(x, data, errors, xy):
+    # try:
+    os.chdir('/network/cogme/outputs/dennis/neural_paper')
     id_ = ''.join(random.choice(string.ascii_letters) for m in xrange(10))
     b = pad_model(scale_params(x), 1)
     c=' '.join(map(str,b))
-    model_template = './template'
-    target_model = id_ + '/targ'
+    model_template = '/network/cogme/outputs/dennis/neural_paper/template'
+    target_model = '/network/cogme/outputs/dennis/neural_paper/{}/targ'.format(id_)
     os.mkdir(id_)
+    shutil.copy('saveModel', id_)
+    shutil.copy('startup', id_)
+    shutil.copy('wsinv3dmt', id_)
+    os.chdir(id_)
     callString='./saveModel '+ model_template + ' ' + c + ' > ' + target_model
     os.system(callString)
     time.sleep(2)
-    shutil.copy('startup', id_)
+    # shutil.copy('startup', id_)
     # shutil.copy('wsinv3dmt', id_)
-    os.chdir(id_)
-    p1 = subprocess.Popen(['../wsinv3dmt'])
+    # os.chdir(id_)
+    p1 = subprocess.Popen(['./wsinv3dmt'])
     p1.wait()
     time.sleep(2)
     model = GeoFitnessNeural(read_data=False)
@@ -55,17 +61,20 @@ def evaluate_single(x, data, errors, xy):
     shutil.rmtree(id_)
     # os.rmdir(id_)
     return rms
+    # except:
+    #    return np.nan
 
 
 def evaluate_population(x, processes, data, errors, xy):
-    # pool = Pool(processes=processes)
-    # rmses = [pool.apply_async(evaluate_single,
-    #                           (xi, data, errors, xy)) for xi in x]
-    # return [i.get() for i in rmses]
-    return [evaluate_single(i, data, errors, xy) for i in x]
+    pool = Pool(processes=processes)
+    rmses = [pool.apply_async(evaluate_single,
+                              (xi, data, errors, xy)) for xi in x]
+    return [i.get() for i in rmses]
+    # return [evaluate_single(i, data, errors, xy) for i in x]
 
 
 def evol(params, sigma, popsize, maxiter, processes=4):
+    # try:
     trajectory = []
     # with open('./dublin/data.p', 'rb') as f:
     #     data, data_errors = pickle.load(f)
@@ -81,3 +90,5 @@ def evol(params, sigma, popsize, maxiter, processes=4):
         es.disp()
         trajectory.append(es.best.get()[:2])
     return es, trajectory
+    # except:
+    #     return es, trajectory
