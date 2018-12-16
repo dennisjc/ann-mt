@@ -1,5 +1,4 @@
 import numpy as np
-from keras.models import load_model
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -28,7 +27,7 @@ all = np.array([truth, ann, inv])
 
 f, axes = plt.subplots(3, 3, sharey=True, figsize=(8.5, 8.5))
 
-for idx, row in zip(labels, x):
+for idx, row in zip(labels, axes):
     for jdx, (ax, model) in enumerate(zip(row, models)):
         im1 = ax.pcolormesh(x_set, y_set, np.log10(models[model][:, :, idx]),
                             cmap='inferno_r', edgecolor='k', linewidth=0.005,
